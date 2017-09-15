@@ -14,7 +14,7 @@ namespace app2.Models
         {
             public bool Success {get;set;}
 
-            public dynamic User {get;set;}
+            public dynamic Profile {get;set;}
         }
 
     }

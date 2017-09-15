@@ -26,7 +26,7 @@ namespace app2.Controllers
                 Profile = new {
                     Username = "mroma82@gmail.com",
                     FirstName = "Michael",
-                    LastName = "Roma"
+                    LastName = "Roma" 
                 }
             };
         }
@@ -41,7 +41,7 @@ namespace app2.Controllers
                 return new Models.Login.Response
                 {
                     Success = true,
-                    User = new 
+                    Profile = new 
                     {
                         FirstName = "Michael",
                         LastName = "Roma",

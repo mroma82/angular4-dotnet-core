@@ -39,7 +39,7 @@ var AuthGuard = (function () {
         this.authService = authService;
     }
     AuthGuard.prototype.canActivate = function () {
-        //if (localStorage.getItem('currentUser')) {
+        // check if authenticated
         if (this.authService.isAuthenticated()) {
             // logged in so return true
             return true;
@@ -84,24 +84,35 @@ var AuthenticationService = (function () {
         this.subject = new __WEBPACK_IMPORTED_MODULE_1_rxjs_Subject__["Subject"]();
     }
     AuthenticationService.prototype.isAuthenticated = function () {
-        if (localStorage.getItem('currentUser')) {
+        var currentUser = localStorage.getItem('currentUser');
+        if (currentUser && currentUser !== undefined) {
             return true;
         }
         return false;
     };
+    AuthenticationService.prototype.getProfile = function () {
+        var currentUser = localStorage.getItem('currentUser');
+        if (currentUser && currentUser !== undefined && currentUser.toString() !== "undefined") {
+            return JSON.parse(currentUser);
+        }
+        return undefined;
+    };
     // set auth
-    AuthenticationService.prototype.setAuth = function (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        this.refreshAfterAuth(true);
+    AuthenticationService.prototype.setAuth = function (profile) {
+        localStorage.setItem('currentUser', JSON.stringify(profile));
+        this.refreshAfterAuth(true, profile);
     };
     // clear auth
     AuthenticationService.prototype.doLogout = function () {
         localStorage.removeItem('currentUser');
-        this.refreshAfterAuth(false);
+        this.refreshAfterAuth(false, null);
     };
     // refresh after auth
-    AuthenticationService.prototype.refreshAfterAuth = function (isAuth) {
-        this.subject.next({ isAuth: isAuth });
+    AuthenticationService.prototype.refreshAfterAuth = function (isAuth, profile) {
+        this.subject.next({
+            isAuth: isAuth,
+            profile: profile
+        });
     };
     AuthenticationService.prototype.getMessage = function () {
         return this.subject.asObservable();
@@ -778,7 +789,7 @@ module.exports = module.exports.toString();
 /***/ "../../../../../src/app/layout/header.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<nav class=\"navbar navbar-expand-lg navbar-light bg-light\">\n  <a class=\"navbar-brand\" routerLink=\"/\">Angular4 Example 2</a>\n  <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\" aria-controls=\"navbarSupportedContent\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">\n    <span class=\"navbar-toggler-icon\"></span>\n  </button>\n\n  <div class=\"collapse navbar-collapse\" id=\"navbarSupportedContent\">\n    <ul class=\"navbar-nav mr-auto\">\n      \n      <li *ngFor=\"let item of modules\" class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"{{item.url}}\">{{ item.name }}</a>\n      </li>\n\n      <li *ngIf=\"isAuthenticated\" class=\"nav-item\">\n        <a class=\"nav-link\" href=\"/\" (click)=\"logOut()\">Log Out</a>\n      </li>\n      \n    </ul>\n    <form class=\"form-inline my-2 my-lg-0\">\n      <input class=\"form-control mr-sm-2\" type=\"text\" placeholder=\"Search\" aria-label=\"Search\">\n      <button class=\"btn btn-outline-success my-2 my-sm-0\" type=\"submit\">Search</button>\n    </form>\n  </div>\n</nav>"
+module.exports = "<nav class=\"navbar navbar-expand-lg navbar-light bg-light\">\n  <a class=\"navbar-brand\" routerLink=\"/\">Angular4 Example 2</a>\n  <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\" aria-controls=\"navbarSupportedContent\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">\n    <span class=\"navbar-toggler-icon\"></span>\n  </button>\n\n  <div class=\"collapse navbar-collapse\" id=\"navbarSupportedContent\">\n    <ul class=\"navbar-nav mr-auto\">\n      \n      <li *ngFor=\"let item of modules\" class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"{{item.url}}\">{{ item.name }}</a>\n      </li>\n\n      <li *ngIf=\"isAuthenticated\" class=\"nav-item\">\n        <a class=\"nav-link clickable\" (click)=\"logOut()\">Log Out</a>\n      </li>\n\n    </ul>\n\n    <span *ngIf=\"isAuthenticated\" class=\"navbar-text\">\n        Welcome, {{ authenticatedProfile.firstName }} {{ authenticatedProfile.lastName }}\n    </span>\n\n    <form class=\"form-inline my-2 my-lg-0\">\n      <input class=\"form-control mr-sm-2\" type=\"text\" placeholder=\"Search\" aria-label=\"Search\">\n      <button class=\"btn btn-outline-success my-2 my-sm-0\" type=\"submit\">Search</button>\n    </form>\n  </div>\n</nav>"
 
 /***/ }),
 
@@ -789,6 +800,7 @@ module.exports = "<nav class=\"navbar navbar-expand-lg navbar-light bg-light\">\
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return HeaderComponent; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("../../../core/@angular/core.es5.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__services_profile_authentication_service__ = __webpack_require__("../../../../../src/app/_services/profile/authentication.service.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_router__ = __webpack_require__("../../../router/@angular/router.es5.js");
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -800,18 +812,25 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 
 
+
 var HeaderComponent = (function () {
-    function HeaderComponent(authService) {
+    function HeaderComponent(authService, router) {
         var _this = this;
         this.authService = authService;
+        this.router = router;
         this.isAuthenticated = this.authService.isAuthenticated();
-        this.subscription = this.authService.getMessage().subscribe(function (isAuth) {
-            _this.isAuthenticated = isAuth;
+        if (this.isAuthenticated) {
+            this.authenticatedProfile = this.authService.getProfile();
+        }
+        this.subscription = this.authService.getMessage().subscribe(function (authObj) {
+            _this.isAuthenticated = authObj.isAuth;
+            _this.authenticatedProfile = authObj.profile;
             _this.refreshMenu();
         });
     }
     HeaderComponent.prototype.logOut = function () {
         this.authService.doLogout();
+        this.router.navigate(['/']);
     };
     ;
     HeaderComponent.prototype.ngOnInit = function () {
@@ -854,10 +873,10 @@ HeaderComponent = __decorate([
         template: __webpack_require__("../../../../../src/app/layout/header.component.html"),
         styles: [__webpack_require__("../../../../../src/app/layout/header.component.css")]
     }),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1__services_profile_authentication_service__["a" /* AuthenticationService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__services_profile_authentication_service__["a" /* AuthenticationService */]) === "function" && _a || Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1__services_profile_authentication_service__["a" /* AuthenticationService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__services_profile_authentication_service__["a" /* AuthenticationService */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_router__["a" /* Router */]) === "function" && _b || Object])
 ], HeaderComponent);
 
-var _a;
+var _a, _b;
 //# sourceMappingURL=header.component.js.map
 
 /***/ }),
@@ -926,7 +945,7 @@ var LoginComponent = (function () {
         this.loginService.run(this.model).then(function (response) {
             // check login
             if (response.success) {
-                _this.authService.setAuth(response.user);
+                _this.authService.setAuth(response.profile);
                 _this.router.navigate(['/']);
             }
             else {

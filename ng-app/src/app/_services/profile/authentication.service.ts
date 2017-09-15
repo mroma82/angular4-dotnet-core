@@ -9,27 +9,39 @@ export class AuthenticationService {
   constructor() { }
 
   isAuthenticated() : boolean {
-    if (localStorage.getItem('currentUser')) {
+    var currentUser = localStorage.getItem('currentUser');
+    if (currentUser && currentUser !== undefined) {
       return true;
     }
     return false;
   }
 
+  getProfile(): any {
+    var currentUser = localStorage.getItem('currentUser');    
+    if(currentUser && currentUser !== undefined && currentUser.toString() !== "undefined") {
+      return JSON.parse(currentUser);
+    }
+    return undefined;
+  }
+
   // set auth
-  setAuth(user:any) {
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    this.refreshAfterAuth(true);
+  setAuth(profile:any) {
+    localStorage.setItem('currentUser', JSON.stringify(profile));
+    this.refreshAfterAuth(true, profile);
   }
   
   // clear auth
   doLogout() : void {
     localStorage.removeItem('currentUser');
-    this.refreshAfterAuth(false);
+    this.refreshAfterAuth(false, null);
   }
 
   // refresh after auth
-  refreshAfterAuth(isAuth: boolean) : void {
-    this.subject.next({ isAuth: isAuth });
+  refreshAfterAuth(isAuth: boolean, profile: any) : void {
+    this.subject.next({ 
+      isAuth: isAuth,
+      profile: profile
+    });
   }
 
   getMessage(): Observable<any> {

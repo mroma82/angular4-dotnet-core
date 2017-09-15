@@ -32,7 +32,7 @@ export class LoginComponent implements OnInit {
 
       // check login
       if( response.success ) {
-        this.authService.setAuth(response.user);
+        this.authService.setAuth(response.profile);
         this.router.navigate(['/']);
       } else {
         this.status = "Invalid login";

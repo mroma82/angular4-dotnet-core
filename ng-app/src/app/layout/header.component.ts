@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthenticationService } from '../_services/profile/authentication.service';
 import { Subscription } from 'rxjs/Subscription';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -15,21 +16,28 @@ export class HeaderComponent implements OnInit {
 
   // authentication
   isAuthenticated: boolean;
+  authenticatedProfile: any;
     
   constructor(
-    private authService: AuthenticationService
+    private authService: AuthenticationService,
+    private router: Router
   ) { 
     this.isAuthenticated  = this.authService.isAuthenticated();  
-    
-    this.subscription = this.authService.getMessage().subscribe(isAuth => { 
-      this.isAuthenticated = isAuth;
+    if( this.isAuthenticated) {
+      this.authenticatedProfile = this.authService.getProfile();
+    }
+
+    this.subscription = this.authService.getMessage().subscribe(authObj => { 
+      this.isAuthenticated = authObj.isAuth;      
+      this.authenticatedProfile = authObj.profile;
+
       this.refreshMenu(); 
     });
   }
 
   logOut(): void {
-    this.authService.doLogout();
-
+    this.authService.doLogout();    
+    this.router.navigate(['/']);
   };
   ngOnInit() {
     

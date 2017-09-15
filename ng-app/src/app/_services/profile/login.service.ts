@@ -29,5 +29,5 @@ export class LoginRequest {
 
 export class LoginResponse {
   success: boolean;
-  user: any;
+  profile: any;
 }
