@@ -1,0 +1,23 @@
+<div class="row">
+  
+  <div class="col-md-4">
+    <h3>{{ status }}</h3>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" [(ngModel)]="model.email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" [(ngModel)]="model.password" class="form-control" />
+    </div>
+      
+    <button (click)="login($event)" type="button" class="btn btn-primary">Login</button>
+    
+    <pre>model = {{ model | json }}</pre>
+  </div>
+
+  
+  
+</div>
