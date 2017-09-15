@@ -17,4 +17,5 @@ Angular 4 + .NET Core
     * *You can add `--watch` for continuous builds*
 * cd into project root directory
   * `dotnet run`
+    * *You can use `dotnet watch run` for continuous builds*
 
