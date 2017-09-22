@@ -849,10 +849,6 @@ var HeaderComponent = (function () {
                 {
                     name: "App 2",
                     url: "/app/app2"
-                },
-                {
-                    name: "App 3",
-                    url: "/app/app3"
                 }
             ];
         }

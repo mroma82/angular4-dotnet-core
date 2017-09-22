@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace app2
 {
@@ -27,8 +29,9 @@ namespace app2
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
+            services.AddCors();
             services.AddMvc();
+            services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,6 +40,26 @@ namespace app2
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            // global cors policy
+            app.UseCors(x => x
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+ 
+            // configure jwt authentication
+            var appSettings = app.ApplicationServices.GetService<IOptions<AppSettings>>().Value;
+            var key = System.Text.Encoding.ASCII.GetBytes(appSettings.Secret);
+            app.UseJwtBearerAuthentication(new JwtBearerOptions{
+                AutomaticAuthenticate = true,
+                TokenValidationParameters = new TokenValidationParameters {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                }
+            });
+            
             app.UseMvc();
 
             app.Use(async (context, next) => {
@@ -48,6 +71,7 @@ namespace app2
                     await next();
                 }
             });
+            
             app.UseMvcWithDefaultRoute();
             app.UseDefaultFiles();
             app.UseStaticFiles();

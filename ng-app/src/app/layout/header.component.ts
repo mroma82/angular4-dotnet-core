@@ -21,7 +21,7 @@ export class HeaderComponent implements OnInit {
   constructor(
     private authService: AuthenticationService,
     private router: Router
-  ) { 
+  ) {  
     this.isAuthenticated  = this.authService.isAuthenticated();  
     if( this.isAuthenticated) {
       this.authenticatedProfile = this.authService.getProfile();
@@ -59,10 +59,6 @@ export class HeaderComponent implements OnInit {
         {
           name: "App 2",
           url: "/app/app2"
-        },
-        {
-          name: "App 3",
-          url: "/app/app3"
         }
       ];
     } else {
