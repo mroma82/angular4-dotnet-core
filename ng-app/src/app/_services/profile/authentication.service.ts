@@ -1,3 +1,4 @@
+import { Headers, RequestOptions } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Subject } from 'rxjs/Subject';
@@ -9,30 +10,33 @@ export class AuthenticationService {
   constructor() { }
 
   isAuthenticated() : boolean {
-    var currentUser = localStorage.getItem('currentUser');
-    if (currentUser && currentUser !== undefined) {
+    var auth = localStorage.getItem('auth');
+    if (auth && auth !== undefined) {
       return true;
     }
     return false;
   }
 
   getProfile(): any {
-    var currentUser = localStorage.getItem('currentUser');    
-    if(currentUser && currentUser !== undefined && currentUser.toString() !== "undefined") {
-      return JSON.parse(currentUser);
+    var auth = localStorage.getItem('auth');    
+    if(auth && auth !== undefined && auth.toString() !== "undefined") {
+      return JSON.parse(auth).profile;
     }
     return undefined;
   }
 
   // set auth
-  setAuth(profile:any) {
-    localStorage.setItem('currentUser', JSON.stringify(profile));
+  setAuth(token:string, profile:any) {
+    localStorage.setItem('auth', JSON.stringify({
+      token: token,
+      profile: profile
+    }));
     this.refreshAfterAuth(true, profile);
   }
   
   // clear auth
   doLogout() : void {
-    localStorage.removeItem('currentUser');
+    localStorage.removeItem('auth');
     this.refreshAfterAuth(false, null);
   }
 
@@ -46,5 +50,15 @@ export class AuthenticationService {
 
   getMessage(): Observable<any> {
     return this.subject.asObservable();
+  }
+
+
+  getJwtHeader() {
+    // create authorization header with jwt token
+    let auth = JSON.parse(localStorage.getItem('auth'));
+    if (auth && auth.token) {
+        let headers = new Headers({ 'Authorization': 'Bearer ' + auth.token });
+        return new RequestOptions({ headers: headers });
+    }
   }
 }

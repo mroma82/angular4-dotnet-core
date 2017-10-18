@@ -1,3 +1,4 @@
+import { AuthenticationService } from './authentication.service';
 import { Injectable } from '@angular/core';
 import { Headers, Http } from '@angular/http';
 
@@ -5,7 +6,8 @@ import { Headers, Http } from '@angular/http';
 export class LoginService {
 
   constructor(
-    private http: Http
+    private http: Http,
+    private auth: AuthenticationService
   ) { }
 
   // login
@@ -18,7 +20,18 @@ export class LoginService {
         password: request.password
       })
       .toPromise()
-      .then(response => response.json() as LoginResponse);      
+      .then(response => 
+      {
+        var loginResponse = response.json() as LoginResponse;
+
+        // check if ok, set auth
+        if( loginResponse.success) {
+          this.auth.setAuth(loginResponse.token, loginResponse.profile);
+        }
+
+        return loginResponse;
+      });
+        
   }
 }
 
@@ -28,6 +41,8 @@ export class LoginRequest {
 }
 
 export class LoginResponse {
+  token: string;
   success: boolean;
+  text: string;
   profile: any;
 }

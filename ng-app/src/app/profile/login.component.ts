@@ -1,3 +1,4 @@
+import { last } from '@angular/router/src/utils/collection';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthenticationService } from '../_services/profile/authentication.service';
@@ -13,9 +14,9 @@ import { LoginService } from '../_services/profile/login.service';
 export class LoginComponent implements OnInit {
 
   status: string = "it works!";
-
+  
   model: LoginModel = new LoginModel();
-
+  
   constructor(
     private router: Router,
     private authService: AuthenticationService,
@@ -27,16 +28,19 @@ export class LoginComponent implements OnInit {
 
   login() : void {
 
+    // reset
+    this.status = "";
+    
     // check login
     this.loginService.run(this.model).then(response => {
 
-      // check login
-      if( response.success ) {
-        this.authService.setAuth(response.profile);
+      // check response
+      if( response.success) {
         this.router.navigate(['/']);
       } else {
-        this.status = "Invalid login";
+        this.status = response.text;
       }
+      
     });
   }
 }

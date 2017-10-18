@@ -13,6 +13,9 @@ namespace app2.Models
         public class Response
         {
             public bool Success {get;set;}
+            public string Text {get;set;}
+
+            public string Token {get;set;}
 
             public dynamic Profile {get;set;}
         }

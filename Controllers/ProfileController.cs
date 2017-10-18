@@ -16,13 +16,18 @@ namespace app2.Controllers
     [Route("api/[controller]/[action]")]
     public class ProfileController : Controller
     {
-        private readonly AppSettings _appSettings;
+
+        private readonly Services.IAuthValidator authValidator;
+        private readonly Services.IUserRepository userRepository;
+
 
         public ProfileController(
-            IOptions<AppSettings> appSettings
+            Services.IAuthValidator authValidator,
+            Services.IUserRepository userRepository
         )
         {
-            _appSettings = appSettings.Value;
+            this.authValidator = authValidator;
+            this.userRepository = userRepository;
         }
         
         // GET api/values
@@ -33,55 +38,37 @@ namespace app2.Controllers
         }
 
         // Is authenticated
-        [AllowAnonymous]
-        [HttpPost]
+        [AllowAnonymous, HttpPost]
         public dynamic IsAuthenticated()
         {
-            return new 
-            {
-                IsAuthenticated = false,
-                Profile = new {
-                    Username = "mroma82@gmail.com",
-                    FirstName = "Michael",
-                    LastName = "Roma" 
-                }
-            };
+            return authValidator.Check();
         }
 
         // login
-        [AllowAnonymous]
-        [HttpPost]
-        public IActionResult Login([FromBody]Models.Login.Request request)
+        [AllowAnonymous, HttpPost]
+        public Models.Login.Response Login([FromBody]Models.Login.Request request)
         {
             // check 
-            if(request.Email == "mroma@test.com" && request.Password == "123")
+            var user = userRepository.GetAll().FirstOrDefault(x => x.Email == request.Email && x.Password == request.Password);
+            if(user != null)
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(new Claim[] 
-                    {
-                        new Claim(ClaimTypes.Name, "123-123")
-                    }),
-                    Expires = DateTime.UtcNow.AddDays(7),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-                };
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                var tokenString = tokenHandler.WriteToken(token);
+                
     
                 // return basic user info (without password) and token to store client side
-                return Ok(new {
-                    Id = "123-123",
-                    Username = "mroma",
-                    FirstName = "Michael",
-                    LastName = "Roma",
-                    Token = tokenString
-                });                
+                return new Models.Login.Response
+                {
+                    Success = true,
+                    Token = tokenString,
+                    Profile = user
+                };                
             }
             else
             {
-                return Unauthorized();
+                return new Models.Login.Response
+                {
+                    Success = false,
+                    Text = "Invalid login"
+                };
             }
         }
 
